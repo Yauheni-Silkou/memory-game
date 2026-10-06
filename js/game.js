@@ -11,6 +11,16 @@ function shuffle(array) {
 }
 
 export function initGame() {
+  if (state.unmatchTimeoutId) {
+    clearTimeout(state.unmatchTimeoutId);
+    state.unmatchTimeoutId = null;
+  }
+
+  state.moves = 0;
+  state.matchedPairs = 0;
+  state.flippedCards = [];
+  state.isLockBoard = false;
+
   const doubleImages = [...CARD_IMAGES, ...CARD_IMAGES];
   const shuffledImages = shuffle(doubleImages);
 
@@ -20,12 +30,18 @@ export function initGame() {
     isFlipped: false,
     isMatched: false
   }));
-  state.flippedCards = [];
 
+  updateStatsDOM();
   renderBoard();
 }
 
+function updateStatsDOM() {
+  window.movesCountRef.textContent = state.moves;
+  window.pairsCountRef.textContent = state.matchedPairs;
+}
+
 function handleCardClick(cardData, cardElement) {
+  if (state.isLockBoard) return;
   if (cardData.isFlipped || cardData.isMatched || state.flippedCards.length >= 2) return;
 
   cardData.isFlipped = true;
@@ -34,6 +50,8 @@ function handleCardClick(cardData, cardElement) {
 
   if (state.flippedCards.length === 1) return;
 
+  state.moves++;
+  updateStatsDOM();
   checkMatch();
 }
 
@@ -43,14 +61,27 @@ function checkMatch() {
   if (first.data.image === second.data.image) {
     first.data.isMatched = true;
     second.data.isMatched = true;
+    state.matchedPairs++;
+    state.flippedCards = [];
     
-    state.flippedCards = [];
+    updateStatsDOM();
+
+    if (state.matchedPairs === CARD_IMAGES.length) {
+      console.log('Victory achieved!');
+    }
   } else {
-    first.data.isFlipped = false;
-    second.data.isFlipped = false;
-    first.element.classList.remove('is-flipped');
-    second.element.classList.remove('is-flipped');
-    state.flippedCards = [];
+    state.isLockBoard = true;
+
+    state.unmatchTimeoutId = setTimeout(() => {
+      first.data.isFlipped = false;
+      second.data.isFlipped = false;
+      first.element.classList.remove('is-flipped');
+      second.element.classList.remove('is-flipped');
+
+      state.isLockBoard = false;
+      state.flippedCards = [];
+      state.unmatchTimeoutId = null;
+    }, 1000);
   }
 }
 
@@ -65,7 +96,6 @@ function renderBoard() {
     const cardInner = el('div', { className: 'card__inner' }, cardBack, cardFront);
     
     const cardElement = el('div', { className: 'card' }, cardInner);
-
     cardElement.addEventListener('click', () => handleCardClick(cardData, cardElement));
 
     window.boardContainerRef.appendChild(cardElement);
