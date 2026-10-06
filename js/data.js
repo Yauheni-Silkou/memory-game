@@ -1,4 +1,4 @@
-export const CARD_IMAGES = ['Aa', 'Bb', 'Cc', 'Dd', 'Ee', 'Ff', 'Gg', 'Hh'];
+export const CARD_DATASET = [1, 2, 3, 4, 5, 6, 7, 8];
 
 export let state = {
   cards: [],

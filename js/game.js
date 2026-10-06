@@ -1,4 +1,4 @@
-import { CARD_IMAGES, state } from './data.js';
+import { CARD_DATASET, state } from './data.js';
 import { el } from './dom.js';
 import { Modal } from './modal.js';
 
@@ -22,12 +22,12 @@ export function initGame() {
   state.flippedCards = [];
   state.isLockBoard = false;
 
-  const doubleImages = [...CARD_IMAGES, ...CARD_IMAGES];
-  const shuffledImages = shuffle(doubleImages);
+  const doubleDataset = [...CARD_DATASET, ...CARD_DATASET];
+  const shuffledItems = shuffle(doubleDataset);
 
-  state.cards = shuffledImages.map((img, index) => ({
+  state.cards = shuffledItems.map((num, index) => ({
     id: index,
-    image: img,
+    imageNumber: num,
     isFlipped: false,
     isMatched: false
   }));
@@ -42,8 +42,8 @@ function updateStatsDOM() {
 }
 
 function handleCardClick(cardData, cardElement) {
-  if (state.isLockBoard) return;
-  if (cardData.isFlipped || cardData.isMatched || state.flippedCards.length >= 2) return;
+  if (state.isLockBoard || cardData.isFlipped || cardData.isMatched) return;
+  if (state.flippedCards.length >= 2) return;
 
   cardData.isFlipped = true;
   cardElement.classList.add('is-flipped');
@@ -59,7 +59,7 @@ function handleCardClick(cardData, cardElement) {
 function checkMatch() {
   const [first, second] = state.flippedCards;
 
-  if (first.data.image === second.data.image) {
+  if (first.data.imageNumber === second.data.imageNumber) {
     first.data.isMatched = true;
     second.data.isMatched = true;
     state.matchedPairs++;
@@ -67,7 +67,7 @@ function checkMatch() {
     
     updateStatsDOM();
 
-    if (state.matchedPairs === CARD_IMAGES.length) {
+    if (state.matchedPairs === CARD_DATASET.length) {
       setTimeout(handleVictory, 300);
     }
   } else {
@@ -114,8 +114,8 @@ function handleVictory() {
   saveResult(state.moves);
 
   const content = el('div', { className: 'modal-inner' },
-    el('h2', {}, 'Congratulations!'),
-    el('p', {}, `You matched all pairs in ${state.moves} moves.`),
+    el('h2', {}, 'Log Closed'),
+    el('p', {}, `Journal entry completed in ${state.moves} tries.`),
     el('div', { className: 'modal-buttons' },
       el('button', { className: 'btn', onClick: () => { Modal.close(); initGame(); } }, 'New Game'),
       el('button', { className: 'btn', onClick: Modal.close }, 'Close')
@@ -127,10 +127,10 @@ function handleVictory() {
 
 export function showLeaderboardModal() {
   const leaderboard = JSON.parse(localStorage.getItem('memory_leaderboard')) || [];
-  const container = el('div', { className: 'modal-inner' }, el('h2', {}, 'Leaderboard'));
+  const container = el('div', { className: 'modal-inner' }, el('h2', {}, 'Leaderboard logs'));
 
   if (leaderboard.length === 0) {
-    container.appendChild(el('p', {}, 'No records yet'));
+    container.appendChild(el('p', {}, 'No logged records found'));
   } else {
     const tbody = el('tbody');
     
@@ -147,7 +147,7 @@ export function showLeaderboardModal() {
       el('thead', {},
         el('tr', {},
           el('th', {}, 'Rank'),
-          el('th', {}, 'Moves'),
+          el('th', {}, 'Tries'),
           el('th', {}, 'Date')
         )
       ),
@@ -165,17 +165,25 @@ export function showLeaderboardModal() {
   Modal.open(container);
 }
 
-function renderBoard() {
+export function renderBoard() {
   while (window.boardContainerRef.firstChild) {
     window.boardContainerRef.removeChild(window.boardContainerRef.firstChild);
   }
 
   state.cards.forEach(cardData => {
-    const cardBack = el('div', { className: 'card__back' }, '?');
-    const cardFront = el('div', { className: 'card__front' }, cardData.image);
+    const cardBack = el('div', { className: 'card__back' });
+    
+    const cardImg = el('img', { 
+      className: 'card__img', 
+      src: `assets/img/cards/card-${cardData.imageNumber}.webp`,
+      alt: 'Botanical Illustration Field Asset'
+    });
+    const cardFront = el('div', { className: 'card__front' }, cardImg);
+    
     const cardInner = el('div', { className: 'card__inner' }, cardBack, cardFront);
     
     const cardElement = el('div', { className: 'card' }, cardInner);
+    
     cardElement.addEventListener('click', () => handleCardClick(cardData, cardElement));
 
     window.boardContainerRef.appendChild(cardElement);

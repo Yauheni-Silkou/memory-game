@@ -8,6 +8,7 @@ function initStaticLayout() {
   window.boardContainerRef = el('div', { className: 'board' });
   
   window.modalContentRef = el('div', { className: 'modal__content' });
+  
   window.modalComponentRef = el('dialog', { 
     className: 'modal',
     onClick: (e) => {
@@ -19,9 +20,20 @@ function initStaticLayout() {
     document.body.classList.remove('modal-open');
   });
 
+  const logoImg = el('img', {
+    className: 'header__logo',
+    src: 'assets/img/logo.png',
+    alt: 'Botanical Field Guide Emblem'
+  });
+
+  const titleWrapper = el('div', { className: 'header__logo-wrapper' },
+    logoImg,
+    el('h1', { className: 'header__title' }, "Naturalist's Log")
+  );
+
   const header = el('header', { className: 'header' },
     el('div', { className: 'header__container' },
-      el('h1', { className: 'header__title' }, 'Memory Game'),
+      titleWrapper,
       el('div', { className: 'header__controls' },
         el('button', { className: 'btn', onClick: initGame }, 'New Game'),
         el('button', { className: 'btn', onClick: showLeaderboardModal }, 'Leaderboard')
@@ -31,7 +43,7 @@ function initStaticLayout() {
 
   const mainContent = el('main', { className: 'main-content' },
     el('div', { className: 'stats' },
-      el('div', { className: 'stats__item' }, 'Moves: ', window.movesCountRef),
+      el('div', { className: 'stats__item' }, 'Tries: ', window.movesCountRef),
       el('div', { className: 'stats__item' }, 'Pairs: ', window.pairsCountRef, ' / 8')
     ),
     window.boardContainerRef
