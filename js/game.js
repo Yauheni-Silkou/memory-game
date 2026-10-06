@@ -20,8 +20,38 @@ export function initGame() {
     isFlipped: false,
     isMatched: false
   }));
+  state.flippedCards = [];
 
   renderBoard();
+}
+
+function handleCardClick(cardData, cardElement) {
+  if (cardData.isFlipped || cardData.isMatched || state.flippedCards.length >= 2) return;
+
+  cardData.isFlipped = true;
+  cardElement.classList.add('is-flipped');
+  state.flippedCards.push({ data: cardData, element: cardElement });
+
+  if (state.flippedCards.length === 1) return;
+
+  checkMatch();
+}
+
+function checkMatch() {
+  const [first, second] = state.flippedCards;
+
+  if (first.data.image === second.data.image) {
+    first.data.isMatched = true;
+    second.data.isMatched = true;
+    
+    state.flippedCards = [];
+  } else {
+    first.data.isFlipped = false;
+    second.data.isFlipped = false;
+    first.element.classList.remove('is-flipped');
+    second.element.classList.remove('is-flipped');
+    state.flippedCards = [];
+  }
 }
 
 function renderBoard() {
@@ -34,11 +64,9 @@ function renderBoard() {
     const cardFront = el('div', { className: 'card__front' }, cardData.image);
     const cardInner = el('div', { className: 'card__inner' }, cardBack, cardFront);
     
-    const cardElement = el('div', { 
-      className: 'card',
-      'data-id': cardData.id,
-      onClick: () => console.log(`Card index ${cardData.id} clicked`)
-    }, cardInner);
+    const cardElement = el('div', { className: 'card' }, cardInner);
+
+    cardElement.addEventListener('click', () => handleCardClick(cardData, cardElement));
 
     window.boardContainerRef.appendChild(cardElement);
   });

@@ -68,11 +68,18 @@ body.modal-open {
   background: #eee;
 }
 
-.card__back {
+.card .card__front {
   display: none;
 }
-.card__front {
+.card .card__back {
   display: block;
+}
+
+.card.is-flipped .card__front {
+  display: block;
+}
+.card.is-flipped .card__back {
+  display: none;
 }
 
 .modal {
