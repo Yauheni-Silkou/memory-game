@@ -1,5 +1,6 @@
 import { el } from './dom.js';
-import { initGame } from './game.js';
+import { initGame, showLeaderboardModal } from './game.js';
+import { Modal } from './modal.js';
 
 function initStaticLayout() {
   window.movesCountRef = el('span', {}, '0');
@@ -7,16 +8,23 @@ function initStaticLayout() {
   window.boardContainerRef = el('div', { className: 'board' });
   
   window.modalContentRef = el('div', { className: 'modal__content' });
-  window.modalComponentRef = el('dialog', { className: 'modal' }, 
-    el('div', { className: 'modal__wrapper' }, window.modalContentRef)
-  );
+  window.modalComponentRef = el('dialog', { 
+    className: 'modal',
+    onClick: (e) => {
+      if (e.target === window.modalComponentRef) Modal.close();
+    }
+  }, el('div', { className: 'modal__wrapper' }, window.modalContentRef));
+
+  window.modalComponentRef.addEventListener('close', () => {
+    document.body.classList.remove('modal-open');
+  });
 
   const header = el('header', { className: 'header' },
     el('div', { className: 'header__container' },
       el('h1', { className: 'header__title' }, 'Memory Game'),
       el('div', { className: 'header__controls' },
         el('button', { className: 'btn', onClick: initGame }, 'New Game'),
-        el('button', { className: 'btn' }, 'Leaderboard')
+        el('button', { className: 'btn', onClick: showLeaderboardModal }, 'Leaderboard')
       )
     )
   );

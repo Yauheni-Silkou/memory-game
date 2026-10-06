@@ -1,5 +1,6 @@
 import { CARD_IMAGES, state } from './data.js';
 import { el } from './dom.js';
+import { Modal } from './modal.js';
 
 function shuffle(array) {
   const newArray = [...array];
@@ -67,7 +68,7 @@ function checkMatch() {
     updateStatsDOM();
 
     if (state.matchedPairs === CARD_IMAGES.length) {
-      console.log('Victory achieved!');
+      setTimeout(handleVictory, 300);
     }
   } else {
     state.isLockBoard = true;
@@ -83,6 +84,85 @@ function checkMatch() {
       state.unmatchTimeoutId = null;
     }, 1000);
   }
+}
+
+function saveResult(moves) {
+  const leaderboard = JSON.parse(localStorage.getItem('memory_leaderboard')) || [];
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2, '0');
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const year = today.getFullYear();
+  const formattedDate = `${day}.${month}.${year}`;
+
+  const newRecord = {
+    moves: moves,
+    date: formattedDate,
+    timestamp: Date.now()
+  };
+
+  leaderboard.push(newRecord);
+  
+  leaderboard.sort((a, b) => {
+    if (a.moves !== b.moves) return a.moves - b.moves;
+    return a.timestamp - b.timestamp;
+  });
+
+  localStorage.setItem('memory_leaderboard', JSON.stringify(leaderboard.slice(0, 10)));
+}
+
+function handleVictory() {
+  saveResult(state.moves);
+
+  const content = el('div', { className: 'modal-inner' },
+    el('h2', {}, 'Congratulations!'),
+    el('p', {}, `You matched all pairs in ${state.moves} moves.`),
+    el('div', { className: 'modal-buttons' },
+      el('button', { className: 'btn', onClick: () => { Modal.close(); initGame(); } }, 'New Game'),
+      el('button', { className: 'btn', onClick: Modal.close }, 'Close')
+    )
+  );
+
+  Modal.open(content);
+}
+
+export function showLeaderboardModal() {
+  const leaderboard = JSON.parse(localStorage.getItem('memory_leaderboard')) || [];
+  const container = el('div', { className: 'modal-inner' }, el('h2', {}, 'Leaderboard'));
+
+  if (leaderboard.length === 0) {
+    container.appendChild(el('p', {}, 'No records yet'));
+  } else {
+    const tbody = el('tbody');
+    
+    leaderboard.forEach((item, index) => {
+      const row = el('tr', {},
+        el('td', {}, el('strong', {}, index + 1)),
+        el('td', {}, item.moves),
+        el('td', {}, item.date)
+      );
+      tbody.appendChild(row);
+    });
+
+    const table = el('table', { className: 'leaderboard-table' },
+      el('thead', {},
+        el('tr', {},
+          el('th', {}, 'Rank'),
+          el('th', {}, 'Moves'),
+          el('th', {}, 'Date')
+        )
+      ),
+      tbody
+    );
+    container.appendChild(table);
+  }
+
+  container.appendChild(
+    el('div', { className: 'modal-buttons' },
+      el('button', { className: 'btn', onClick: Modal.close }, 'Close')
+    )
+  );
+
+  Modal.open(container);
 }
 
 function renderBoard() {
